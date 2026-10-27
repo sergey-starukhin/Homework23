@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstring>
 #include <windows.h>
+#include "Account.h"
 
 using namespace std;
 
@@ -99,10 +100,77 @@ using namespace std;
 
 // ===== Ваш код =====
 
+
+int Account::count = 0;
+int Account::nextId = 1001;
+double Account::totalMoney = 0;
+
 int main()
 {
     SetConsoleOutputCP(65001);
     SetConsoleCP(65001);
+
+    // РІВЕНЬ 1
+
+    cout << Account::getCount() << endl;
+
+    Account privatBank("Гриша", 1000);
+    Account oshad("Миша");
+    Account sense;
+
+    oshad.deposit(3000);
+    sense.deposit(4000);
+    sense.withdraw(450);
+    cout << endl << "Попытка снять больше, чем есть на счету: " << endl;
+    privatBank.withdraw(2000);
+    cout << endl;
+
+    privatBank.print();
+    oshad.print();
+    sense.print();
+
+    cout << "Количество пользователей: " << Account::getCount() << endl;
+    cout << "Общий банк: " << Account::getTotalMoney() << endl;
+
+    // РІВЕНЬ 2
+
+    sense.deposit(500).withdraw(200).print();
+
+    sense.transfer(sense, 450);
+    privatBank.transfer(oshad, 2000);
+
+    if (sense.transfer(privatBank, 2000))
+        cout << "Операция успешно выполнена!" << endl;
+
+    // РІВЕНЬ 3
+
+    int size;
+    cout << "Введите размер массива: ";
+    cin >> size;
+    Account* accounts = new Account[size];
+
+    for (int i = 0; i < size; i++)
+    {
+        int amount;
+        cout << "Введите сумму: ";
+        cin >> amount;
+        accounts[i].deposit(amount);
+    }
+
+    int bigger = 0;
+    for (int i = 0; i < size; i++)
+    {
+        if (accounts[bigger].getBalance() < accounts[i].getBalance())
+            bigger = i;
+    }
+    cout << "Счёт с наибольшим балансом: ";
+    accounts[bigger].print();
+
+    cout << "Количество пользователей: " << Account::getCount() << endl;
+    cout << "Общий банк: " << Account::getTotalMoney() << endl;
+    delete[] accounts;
+    cout << "Количество пользователей после удаления массива: " << Account::getCount() << endl;
+    cout << "Общий банк после удаления массива: " << Account::getTotalMoney() << endl;
 
     return 0;
 }
@@ -110,14 +178,22 @@ int main()
 /*
   ВІДПОВІДІ НА ЧАСТИНУ «ПОЯСНИ»
 
-  1.
+  1. Чому count і totalMoney статичні, а balance — ні?
+  Потому что count и totalMoney -  это общие для всех экземпляров класса счётчики, а balance - у каждого экземпляра должен быть свой
 
-  2.
+  2. Навіщо в setOwner потрібен this->? Що станеться, якщо його прибрати?
+  Потому что имена аргумента в методе и поля класса совпадают и компилятор не знает, к какой переменной обратиться. 
+  Если убрать this-> то все действия будут происходить только с переменной-аргументом
 
-  3.
+  3. Чому getCount() можна викликати ще до створення будь-якого рахунку?
+  Потому что это статический метод и ему не нужен экземпляр класса
 
-  4.
+  4. (Рівень 2) Що станеться, якщо в transfer прибрати перевірку if(this == &to)? Чи зміниться totalMoney після переказу? Чому?
+  Если убрать проверку, то в аргумент Account& to может быть передана ссылка на самого себя и сумма будет вычитаться и прибавляться в balance одного и того же объекта 
+  totalMoney не изменится, потому что с поля this->balance вычитается та же сумма, которая прибавляется в поле to.balance
 
-  5.
+  5. (Рівень 2) Чому deposit повертає Account&, а не Account?
+  Без амперсанда вместо ссылки будет возвращаться копия объекта
+  Возвращаемая ссылка нам нужна, чтобы из одного метода класса можно было вызвать ещё один метод класса
 
 */
